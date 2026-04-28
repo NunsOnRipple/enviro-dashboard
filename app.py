@@ -127,7 +127,7 @@ sensor_thread.start()
 def index():
     return render_template('index.html', **latest_data)
 
-@@app.route('/data')
+@app.route('/data')
 def data():
     response = dict(latest_data)
     response['oxidising_score'] = gas_air_quality('oxidising', latest_data['oxidising'])
