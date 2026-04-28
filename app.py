@@ -78,28 +78,52 @@ def read_sensors():
     last_logged = 0
     while True:
         try:
-            temperature = bme280.get_temperature()
-            temperature_f = (temperature * 9/5) +32
-            latest_data['temperature'] = round(temperature_f -5, 1)
-            latest_data['humidity'] = round(bme280.get_humidity(), 1)
-            latest_data['pressure'] = round(bme280.get_pressure(), 1)
+            # Read BME280 with sanity checks
+            new_temp_c = bme280.get_temperature()
+            new_pressure = bme280.get_pressure()
+            new_humidity = bme280.get_humidity()
+            
+            # Reject implausible readings (likely failed I2C reads)
+            if (-20 < new_temp_c < 50 and
+                850 < new_pressure < 1100 and
+                0 < new_humidity < 100):
+                temperature_f = (new_temp_c * 9/5) + 32
+                latest_data['temperature'] = round(temperature_f - 5, 1)  # offset for CPU heat
+                latest_data['pressure'] = round(new_pressure, 1)
+                latest_data['humidity'] = round(new_humidity, 1)
+                bme280_valid = True
+            else:
+                print(f"BME280 sanity check failed: T={new_temp_c}, P={new_pressure}, H={new_humidity}")
+                bme280_valid = False
 
-            latest_data['light'] = round(ltr559.get_lux(), 1)
-            latest_data['proximity'] = ltr559.get_proximity()
+            # Light + proximity (less prone to glitches but still wrap)
+            try:
+                latest_data['light'] = round(ltr559.get_lux(), 1)
+                latest_data['proximity'] = ltr559.get_proximity()
+            except Exception as e:
+                print(f"LTR559 read error: {e}")
 
-            gas_data = gas.read_all()
-            latest_data['oxidising'] = round(gas_data.oxidising / 1000,  2)
-            latest_data['reducing'] = round(gas_data.reducing / 1000, 2)
-            latest_data['nh3'] = round(gas_data.nh3 / 1000, 2)
+            # Gas sensor
+            try:
+                gas_data = gas.read_all()
+                latest_data['oxidising'] = round(gas_data.oxidising / 1000, 2)
+                latest_data['reducing'] = round(gas_data.reducing / 1000, 2)
+                latest_data['nh3'] = round(gas_data.nh3 / 1000, 2)
+            except Exception as e:
+                print(f"Gas read error: {e}")
 
-            pm_data = pms5003.read()
-            latest_data['pm1'] = pm_data.pm_ug_per_m3(1.0)
-            latest_data['pm25'] = pm_data.pm_ug_per_m3(2.5)
-            latest_data['pm10'] = pm_data.pm_ug_per_m3(10)
+            # PMS5003 particulates
+            try:
+                pm_data = pms5003.read()
+                latest_data['pm1'] = pm_data.pm_ug_per_m3(1.0)
+                latest_data['pm25'] = pm_data.pm_ug_per_m3(2.5)
+                latest_data['pm10'] = pm_data.pm_ug_per_m3(10)
+            except Exception as e:
+                print(f"PMS5003 read error: {e}")
 
-            # Log to database once per minute
+            # Log to database once per minute, ONLY if BME280 read was valid
             now = time.time()
-            if now - last_logged >= 60:
+            if now - last_logged >= 60 and bme280_valid:
                 conn = sqlite3.connect(DB_PATH)
                 c = conn.cursor()
                 c.execute('''
@@ -116,7 +140,7 @@ def read_sensors():
                 last_logged = now
 
         except Exception as e:
-            print(f"Sensor read error: {e}")
+            print(f"Sensor read loop error: {e}")
 
         time.sleep(3)
 
