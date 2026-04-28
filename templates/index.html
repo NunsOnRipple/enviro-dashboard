@@ -139,12 +139,33 @@
             </div>
             <div class="secondary">
                 <div class="stat">
-                    <span class="label">Humidity</span>
-                    <span class="stat-value" id="humidity">{{ humidity | round(1) }}%</span>
+                    <span class="label">Temperature</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('humidity')">
+            <div class="icon">💧</div>
+            <div class="main">
+                <span class="value" id="humidity">{{ humidity | round(1) }}</span>
+                <span class="unit">%</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">Humidity</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('pressure')">
+            <div class="icon">🌬</div>
+            <div class="main">
+                <span class="value" id="pressure">{{ pressure | round(1) }}</span>
+                <span class="unit">hPa</span>
+            </div>
+            <div class="secondary">
                 <div class="stat">
                     <span class="label">Pressure</span>
-                    <span class="stat-value" id="pressure">{{ pressure | round(1) }} hPa</span>
                 </div>
             </div>
         </div>
@@ -157,26 +178,72 @@
             </div>
             <div class="secondary">
                 <div class="stat">
+                    <span class="label">Light</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('proximity')">
+            <div class="icon">👋</div>
+            <div class="main">
+                <span class="value" id="proximity">{{ proximity }}</span>
+                <span class="unit"></span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
                     <span class="label">Proximity</span>
-                    <span class="stat-value" id="proximity">{{ proximity }}</span>
                 </div>
             </div>
         </div>
 
         <div class="row" onclick="goHistory('oxidising')">
-            <div class="icon">💨</div>
+            <div class="icon">🔥</div>
             <div class="main">
                 <span class="value" id="oxidising">{{ oxidising | round(2) }}</span>
-                <span class="unit">kΩ Oxidising</span>
+                <span class="unit">kΩ</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">Oxidising</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('reducing')">
+            <div class="icon">♻️</div>
+            <div class="main">
+                <span class="value" id="reducing">{{ reducing | round(2) }}</span>
+                <span class="unit">kΩ</span>
             </div>
             <div class="secondary">
                 <div class="stat">
                     <span class="label">Reducing</span>
-                    <span class="stat-value" id="reducing">{{ reducing | round(2) }} kΩ</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('nh3')">
+            <div class="icon">🧪</div>
+            <div class="main">
+                <span class="value" id="nh3">{{ nh3 | round(2) }}</span>
+                <span class="unit">kΩ</span>
+            </div>
+            <div class="secondary">
                 <div class="stat">
                     <span class="label">NH3</span>
-                    <span class="stat-value" id="nh3">{{ nh3 | round(2) }} kΩ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('pm1')">
+            <div class="icon">🌫</div>
+            <div class="main">
+                <span class="value" id="pm1">{{ pm1 }}</span>
+                <span class="unit">µg/m³</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">PM1</span>
                 </div>
             </div>
         </div>
@@ -185,16 +252,24 @@
             <div class="icon">🌫</div>
             <div class="main">
                 <span class="value" id="pm25">{{ pm25 }}</span>
-                <span class="unit">µg/m³ PM2.5</span>
+                <span class="unit">µg/m³</span>
             </div>
             <div class="secondary">
                 <div class="stat">
-                    <span class="label">PM1</span>
-                    <span class="stat-value" id="pm1">{{ pm1 }}</span>
+                    <span class="label">PM2.5</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="row" onclick="goHistory('pm10')">
+            <div class="icon">🌫</div>
+            <div class="main">
+                <span class="value" id="pm10">{{ pm10 }}</span>
+                <span class="unit">µg/m³</span>
+            </div>
+            <div class="secondary">
                 <div class="stat">
                     <span class="label">PM10</span>
-                    <span class="stat-value" id="pm10">{{ pm10 }}</span>
                 </div>
             </div>
         </div>
@@ -211,15 +286,15 @@
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('temperature').textContent = data.temperature;
-                    document.getElementById('humidity').textContent = data.humidity + '%';
-                    document.getElementById('pressure').textContent = data.pressure + ' hPa';
+                    document.getElementById('humidity').textContent = data.humidity;
+                    document.getElementById('pressure').textContent = data.pressure;
                     document.getElementById('light').textContent = data.light;
                     document.getElementById('proximity').textContent = data.proximity;
                     document.getElementById('oxidising').textContent = data.oxidising;
-                    document.getElementById('reducing').textContent = data.reducing + ' kΩ';
-                    document.getElementById('nh3').textContent = data.nh3 + ' kΩ';
-                    document.getElementById('pm25').textContent = data.pm25;
+                    document.getElementById('reducing').textContent = data.reducing;
+                    document.getElementById('nh3').textContent = data.nh3;
                     document.getElementById('pm1').textContent = data.pm1;
+                    document.getElementById('pm25').textContent = data.pm25;
                     document.getElementById('pm10').textContent = data.pm10;
                 });
         }
