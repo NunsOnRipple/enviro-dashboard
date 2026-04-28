@@ -146,6 +146,28 @@
         const metric = "{{ metric }}";
         let currentRange = 'hour';
         let chart = null;
+        // Custom plugin to draw a vertical line at the active hover point
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            afterDraw: (chart) => {
+                if (chart.tooltip && chart.tooltip.getActiveElements && chart.tooltip.getActiveElements().length) {
+                    const ctx = chart.ctx;
+                    const activePoint = chart.tooltip.getActiveElements()[0];
+                    const x = activePoint.element.x;
+                    const topY = chart.scales.y.top;
+                    const bottomY = chart.scales.y.bottom;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, topY);
+                    ctx.lineTo(x, bottomY);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
 
         const metricInfo = {
             temperature: { label: 'Temperature', unit: '°F', color: '#ff4d4d' },
@@ -248,6 +270,7 @@
 
             chart = new Chart(document.getElementById('historyChart'), {
                 type: 'line',
+                plugins: [verticalLinePlugin],
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
