@@ -212,12 +212,12 @@
         <div class="row" onclick="goHistory('oxidising')">
             <div class="icon"><i data-lucide="flame"></i></div>
             <div class="main">
-                <span class="value" id="oxidising">{{ oxidising | round(2) }}</span>
-                <span class="unit">kΩ</span>
+                <span class="value" id="oxidising_score">—</span>
+                <span class="unit" id="oxidising_label"></span>
             </div>
             <div class="secondary">
                 <div class="stat">
-                    <span class="label">Oxidising Gases(NO2)</span>
+                    <span class="label">Oxidising Gases (NO2)</span>
                 </div>
             </div>
         </div>
@@ -225,12 +225,12 @@
         <div class="row" onclick="goHistory('reducing')">
             <div class="icon"><i data-lucide="recycle"></i></div>
             <div class="main">
-                <span class="value" id="reducing">{{ reducing | round(2) }}</span>
-                <span class="unit">kΩ</span>
+                <span class="value" id="reducing_score">—</span>
+                <span class="unit" id="reducing_label"></span>
             </div>
             <div class="secondary">
                 <div class="stat">
-                    <span class="label">Reducing Gases(CO)</span>
+                    <span class="label">Reducing Gases (CO)</span>
                 </div>
             </div>
         </div>
@@ -238,12 +238,12 @@
         <div class="row" onclick="goHistory('nh3')">
             <div class="icon"><i data-lucide="flask-conical"></i></div>
             <div class="main">
-                <span class="value" id="nh3">{{ nh3 | round(2) }}</span>
-                <span class="unit">kΩ</span>
+                <span class="value" id="nh3_score">—</span>
+                <span class="unit" id="nh3_label"></span>
             </div>
             <div class="secondary">
                 <div class="stat">
-                    <span class="label">NH3(Ammonia)</span>
+                    <span class="label">NH3 (Ammonia)</span>
                 </div>
             </div>
         </div>
@@ -303,9 +303,19 @@
                     document.getElementById('pressure').textContent = data.pressure;
                     document.getElementById('light').textContent = data.light;
                     document.getElementById('proximity').textContent = data.proximity;
-                    document.getElementById('oxidising').textContent = data.oxidising;
-                    document.getElementById('reducing').textContent = data.reducing;
-                    document.getElementById('nh3').textContent = data.nh3;
+                    // Gas: show score + label
+                    document.getElementById('oxidising_score').textContent = data.oxidising_score !== null ? data.oxidising_score : '—';
+                    document.getElementById('oxidising_label').textContent = airQualityLabel(data.oxidising_score);
+                    applyAirQualityColor('oxidising_score', data.oxidising_score);
+                    
+                    document.getElementById('reducing_score').textContent = data.reducing_score !== null ? data.reducing_score : '—';
+                    document.getElementById('reducing_label').textContent = airQualityLabel(data.reducing_score);
+                    applyAirQualityColor('reducing_score', data.reducing_score);
+                    
+                    document.getElementById('nh3_score').textContent = data.nh3_score !== null ? data.nh3_score : '—';
+                    document.getElementById('nh3_label').textContent = airQualityLabel(data.nh3_score);
+                    applyAirQualityColor('nh3_score', data.nh3_score);
+                    
                     document.getElementById('pm1').textContent = data.pm1;
                     document.getElementById('pm25').textContent = data.pm25;
                     document.getElementById('pm10').textContent = data.pm10;
@@ -355,6 +365,24 @@
             el.classList.remove('good', 'moderate', 'unhealthy');
             const status = getColor(metric, value);
             if (status) el.classList.add(status);
+        }
+
+        function airQualityLabel(score) {
+            if (score === null || score === undefined) return '';
+            if (score >= 85) return 'Good';
+            if (score >= 60) return 'Moderate';
+            if (score >= 35) return 'Elevated';
+            return 'Poor';
+        }
+
+        function applyAirQualityColor(elementId, score) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.classList.remove('good', 'moderate', 'unhealthy');
+            if (score === null || score === undefined) return;
+            if (score >= 85) el.classList.add('good');
+            else if (score >= 60) el.classList.add('moderate');
+            else el.classList.add('unhealthy');
         }
 
         updateLive(); // run once immediately so colors apply on load
