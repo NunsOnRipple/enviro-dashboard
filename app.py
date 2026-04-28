@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 # Gas sensor baselines (R0) - represents clean air resistance
 # Tuned from 95th/5th percentile of historical data
-GGAS_BASELINES = {
+GAS_BASELINES = {
     'oxidising': 42.72,
     'reducing': 403.7,
     'nh3': 124.65
