@@ -122,6 +122,10 @@
             font-size: 0.95rem;
         }
 
+        .value.good { color: #6bff9d; }
+        .value.moderate { color: #ffd24d; }
+        .value.unhealthy { color: #ff6b6b; }
+
         @media (max-width: 500px) {
             .row { grid-template-columns: 50px 1fr auto; padding: 18px 14px; gap: 10px; }
             .row .value { font-size: 1.8rem; }
@@ -305,9 +309,55 @@
                     document.getElementById('pm1').textContent = data.pm1;
                     document.getElementById('pm25').textContent = data.pm25;
                     document.getElementById('pm10').textContent = data.pm10;
+
+                    // Apply color coding
+                    applyColor('temperature', 'temperature', data.temperature);
+                    applyColor('humidity', 'humidity', data.humidity);
+                    applyColor('pressure', 'pressure', data.pressure);
+                    applyColor('light', 'light', data.light);
+                    applyColor('proximity', 'proximity', data.proximity);
+                    applyColor('oxidising', 'oxidising', data.oxidising);
+                    applyColor('reducing', 'reducing', data.reducing);
+                    applyColor('nh3', 'nh3', data.nh3);
+                    applyColor('pm1', 'pm1', data.pm1);
+                    applyColor('pm25', 'pm25', data.pm25);
+                    applyColor('pm10', 'pm10', data.pm10);
                 });
         }
 
+        // Threshold definitions: each metric has [good_max, moderate_max]
+        // Below good_max = green, between = yellow, above moderate_max = red
+        const thresholds = {
+            temperature: [78, 85],         // °F: comfortable, warm, hot
+            humidity: [60, 75],            // %: comfortable, humid, very humid
+            pressure: [1030, 1040],        // hPa: typical range, high, very high
+            light: [10000, 50000],         // lux: indoor, bright, very bright
+            proximity: [50, 200],          // arbitrary
+            oxidising: [50, 100],          // kΩ - tweak based on your readings
+            reducing: [200, 500],          // kΩ
+            nh3: [100, 300],               // kΩ
+            pm1: [12, 35],                 // µg/m³ (using PM2.5 standards as proxy)
+            pm25: [12, 35],                // µg/m³ EPA standard
+            pm10: [54, 154]                // µg/m³ EPA standard
+        };
+
+        function getColor(metric, value) {
+            const t = thresholds[metric];
+            if (!t || value === null || value === undefined) return null;
+            if (value < t[0]) return 'good';
+            if (value < t[1]) return 'moderate';
+            return 'unhealthy';
+        }
+
+        function applyColor(elementId, metric, value) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.classList.remove('good', 'moderate', 'unhealthy');
+            const status = getColor(metric, value);
+            if (status) el.classList.add(status);
+        }
+
+        updateLive(); // run once immediately so colors apply on load
         setInterval(updateLive, 5000);
         lucide.createIcons();
     </script>
