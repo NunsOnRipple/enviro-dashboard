@@ -54,7 +54,8 @@ def read_sensors():
     while True:
         try:
             temperature = bme280.get_temperature()
-            latest_data['temperature'] = round((temperature * 9/5) + 32, 1)
+            temperature_f = (temperature * 9/5) +32
+            latest_data['temperature'] = round(temperature_f -5, 1)
             latest_data['humidity'] = round(bme280.get_humidity(), 1)
             latest_data['pressure'] = round(bme280.get_pressure(), 1)
 
