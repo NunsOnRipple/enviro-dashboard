@@ -13,10 +13,10 @@ app = Flask(__name__)
 
 # Gas sensor baselines (R0) - represents clean air resistance
 # Tuned from 95th/5th percentile of historical data
-GAS_BASELINES = {
-    'oxidising': 32.63,   # lower = cleaner, this is the "clean air" minimum
-    'reducing': 636.13,   # higher = cleaner, this is the "clean air" maximum  
-    'nh3': 201.74         # higher = cleaner, this is the "clean air" maximum
+GGAS_BASELINES = {
+    'oxidising': 42.72,
+    'reducing': 403.7,
+    'nh3': 124.65
 }
 
 def gas_air_quality(metric, current_value):
