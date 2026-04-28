@@ -108,16 +108,19 @@ def data():
 
 @app.route('/history')
 def history():
-    # Get the time range from the request (defaults to 1 hour)
     range_arg = request.args.get('range', 'hour')
     if range_arg == 'hour':
         since = datetime.now() - timedelta(hours=1)
+        bucket_minutes = 0  # no downsampling, return raw
     elif range_arg == 'day':
         since = datetime.now() - timedelta(days=1)
+        bucket_minutes = 10  # 144 points
     elif range_arg == 'week':
         since = datetime.now() - timedelta(days=7)
+        bucket_minutes = 60  # 168 points
     else:
         since = datetime.now() - timedelta(hours=1)
+        bucket_minutes = 0
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -126,13 +129,48 @@ def history():
     rows = c.fetchall()
     conn.close()
 
-    return jsonify([{
-        'timestamp': r[0],
-        'temperature': r[1], 'humidity': r[2], 'pressure': r[3],
-        'light': r[4],
-        'oxidising': r[5], 'reducing': r[6], 'nh3': r[7],
-        'pm1': r[8], 'pm25': r[9], 'pm10': r[10]
-    } for r in rows])
+    # Helper to convert a row into a dict
+    def row_to_dict(r):
+        return {
+            'timestamp': r[0],
+            'temperature': r[1], 'humidity': r[2], 'pressure': r[3],
+            'light': r[4],
+            'oxidising': r[5], 'reducing': r[6], 'nh3': r[7],
+            'pm1': r[8], 'pm25': r[9], 'pm10': r[10]
+        }
+
+    # No downsampling for hour view, return raw values
+    if bucket_minutes == 0:
+        return jsonify([{**row_to_dict(r), 'min': None, 'max': None} for r in rows])
+
+    # Downsample: group rows into time buckets, compute min/avg/max
+    metrics = ['temperature', 'humidity', 'pressure', 'light',
+               'oxidising', 'reducing', 'nh3', 'pm1', 'pm25', 'pm10']
+
+    buckets = {}
+    for r in rows:
+        d = row_to_dict(r)
+        ts = datetime.fromisoformat(d['timestamp'])
+        bucket_key = ts.replace(
+            minute=(ts.minute // bucket_minutes) * bucket_minutes,
+            second=0, microsecond=0
+        ).isoformat()
+        if bucket_key not in buckets:
+            buckets[bucket_key] = []
+        buckets[bucket_key].append(d)
+
+    result = []
+    for bucket_ts in sorted(buckets.keys()):
+        readings = buckets[bucket_ts]
+        entry = {'timestamp': bucket_ts, 'min': {}, 'max': {}}
+        for m in metrics:
+            vals = [r[m] for r in readings]
+            entry[m] = round(sum(vals) / len(vals), 2)  # average
+            entry['min'][m] = round(min(vals), 2)
+            entry['max'][m] = round(max(vals), 2)
+        result.append(entry)
+
+    return jsonify(result)
 
 @app.route('/history-view')
 def history_view():
