@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - {{ metric }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a14;
+            --panel: #1a1a2e;
+            --text: #ffffff;
+            --text-dim: #888899;
+            --accent: #4dafff;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        body {
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: grid;
+            grid-template-columns: 80px 1fr 80px;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--text);
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .header .title {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text-dim);
+        }
+
+        .range-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+        }
+
+        .range-buttons button {
+            background: var(--panel);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .range-buttons button.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            padding: 10px 20px 20px;
+            min-height: 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stats .stat {
+            text-align: center;
+        }
+
+        .stats .label {
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .stats .stat-value {
+            font-size: 1.4rem;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="back-btn" onclick="window.location='/'">← Back</button>
+        <span class="title" id="metricTitle">{{ metric }}</span>
+        <span></span>
+    </div>
+
+    <div class="range-buttons">
+        <button onclick="setRange('hour', this)" class="active">Hour</button>
+        <button onclick="setRange('day', this)">Day</button>
+        <button onclick="setRange('week', this)">Week</button>
+    </div>
+
+    <div class="chart-wrapper">
+        <div class="chart-container">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="label">Min</div>
+            <div class="stat-value" id="statMin">—</div>
+        </div>
+        <div class="stat">
+            <div class="label">Avg</div>
+            <div class="stat-value" id="statAvg">—</div>
+        </div>
+        <div class="stat">
+            <div class="label">Max</div>
+            <div class="stat-value" id="statMax">—</div>
+        </div>
+    </div>
+
+    <script>
+        const metric = "{{ metric }}";
+        let currentRange = 'hour';
+        let chart = null;
+
+        const metricInfo = {
+            temperature: { label: 'Temperature', unit: '°F', color: '#ff4d4d' },
+            humidity: { label: 'Humidity', unit: '%', color: '#4dafff' },
+            pressure: { label: 'Pressure', unit: 'hPa', color: '#ffd24d' },
+            light: { label: 'Light', unit: 'lux', color: '#ffffff' },
+            oxidising: { label: 'Oxidising', unit: 'kΩ', color: '#ff6b9d' },
+            reducing: { label: 'Reducing', unit: 'kΩ', color: '#6bffb8' },
+            nh3: { label: 'NH3', unit: 'kΩ', color: '#c76bff' },
+            pm1: { label: 'PM1', unit: 'µg/m³', color: '#4dafff' },
+            pm25: { label: 'PM2.5', unit: 'µg/m³', color: '#ff9d6b' },
+            pm10: { label: 'PM10', unit: 'µg/m³', color: '#ff4d4d' }
+        };
+
+        // For PM metrics, show all three overlaid
+        const isPM = ['pm1', 'pm25', 'pm10'].includes(metric);
+
+        document.getElementById('metricTitle').textContent = isPM
+            ? 'Particulates'
+            : metricInfo[metric].label;
+
+        function loadData() {
+            fetch('/history?range=' + currentRange)
+                .then(r => r.json())
+                .then(history => {
+                    if (chart) chart.destroy();
+                    drawChart(history);
+                    updateStats(history);
+                });
+        }
+
+        function drawChart(history) {
+            const labels = history.map(r => new Date(r.timestamp).toLocaleString([], {
+                month: 'numeric', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }));
+
+            const datasets = [];
+
+            if (isPM) {
+                ['pm1', 'pm25', 'pm10'].forEach(m => {
+                    datasets.push({
+                        label: metricInfo[m].label,
+                        data: history.map(r => r[m]),
+                        borderColor: metricInfo[m].color,
+                        backgroundColor: metricInfo[m].color + '20',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.3,
+                        fill: false
+                    });
+                });
+            } else {
+                datasets.push({
+                    label: metricInfo[metric].label,
+                    data: history.map(r => r[metric]),
+                    borderColor: metricInfo[metric].color,
+                    backgroundColor: metricInfo[metric].color + '30',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true
+                });
+            }
+
+            chart = new Chart(document.getElementById('historyChart'), {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: isPM,
+                            labels: { color: '#fff', font: { size: 12 } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#888899', font: { size: 10 }, maxTicksLimit: 6 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#888899', font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStats(history) {
+            const values = isPM
+                ? history.map(r => r.pm25)  // show PM2.5 stats by default for particulates
+                : history.map(r => r[metric]);
+
+            if (values.length === 0) {
+                document.getElementById('statMin').textContent = '—';
+                document.getElementById('statAvg').textContent = '—';
+                document.getElementById('statMax').textContent = '—';
+                return;
+            }
+
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            const unit = isPM ? metricInfo.pm25.unit : metricInfo[metric].unit;
+
+            document.getElementById('statMin').textContent = min.toFixed(1) + ' ' + unit;
+            document.getElementById('statAvg').textContent = avg.toFixed(1) + ' ' + unit;
+            document.getElementById('statMax').textContent = max.toFixed(1) + ' ' + unit;
+        }
+
+        function setRange(range, button) {
+            currentRange = range;
+            document.querySelectorAll('.range-buttons button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            loadData();
+        }
+
+        loadData();
+        setInterval(loadData, 60000); // refresh every minute
+    </script>
+
+</body>
+</html>

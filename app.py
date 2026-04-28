@@ -134,5 +134,10 @@ def history():
         'pm1': r[8], 'pm25': r[9], 'pm10': r[10]
     } for r in rows])
 
+@app.route('/history-view')
+def history_view():
+    metric = request.args.get('metric', 'temperature')
+    return render_template('history.html', metric=metric)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
