@@ -11,6 +11,31 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
+# Gas sensor baselines (R0) - represents clean air resistance
+# Tuned from 95th/5th percentile of historical data
+GAS_BASELINES = {
+    'oxidising': 32.63,   # lower = cleaner, this is the "clean air" minimum
+    'reducing': 636.13,   # higher = cleaner, this is the "clean air" maximum  
+    'nh3': 201.74         # higher = cleaner, this is the "clean air" maximum
+}
+
+def gas_air_quality(metric, current_value):
+    """
+    Returns a 0-100 score where 100 = baseline clean air, lower = more polluted.
+    Returns None if can't compute.
+    """
+    baseline = GAS_BASELINES.get(metric)
+    if baseline is None or current_value is None or current_value <= 0:
+        return None
+    
+    if metric == 'oxidising':
+        # Higher resistance = more NO2. Score drops as value rises above baseline.
+        # If value == baseline → 100. If value is 2x baseline → 50. Etc.
+        return round(max(0, min(100, (baseline / current_value) * 100)), 1)
+    else:
+        # reducing & nh3: lower resistance = more gas. Score drops as value falls.
+        return round(max(0, min(100, (current_value / baseline) * 100)), 1)
+
 # Setup sensors
 bus = SMBus(1)
 bme280 = BME280(i2c_dev=bus)
@@ -102,9 +127,13 @@ sensor_thread.start()
 def index():
     return render_template('index.html', **latest_data)
 
-@app.route('/data')
+@@app.route('/data')
 def data():
-    return jsonify(latest_data)
+    response = dict(latest_data)
+    response['oxidising_score'] = gas_air_quality('oxidising', latest_data['oxidising'])
+    response['reducing_score'] = gas_air_quality('reducing', latest_data['reducing'])
+    response['nh3_score'] = gas_air_quality('nh3', latest_data['nh3'])
+    return jsonify(response)
 
 @app.route('/history')
 def history():
