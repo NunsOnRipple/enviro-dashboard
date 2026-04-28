@@ -8,337 +8,202 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        :root {
+            --bg: #0a0a14;
+            --row-bg: #1a1a2e;
+            --row-bg-alt: #15152a;
+            --text: #ffffff;
+            --text-dim: #888899;
+            --accent: #4dafff;
+            --border: rgba(255,255,255,0.06);
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #1a1a2e;
-            color: #ffffff;
-            padding: 20px;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
-        h1 {
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .header .location {
             text-align: center;
-            font-size: 2rem;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
+            flex: 1;
         }
 
-        .range-buttons {
-            text-align: center;
-            margin-bottom: 25px;
+        .rows {
+            display: flex;
+            flex-direction: column;
         }
 
-        .range-buttons button {
-            background: #2a2a4e;
-            color: white;
-            border: none;
-            padding: 8px 18px;
-            margin: 0 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .range-buttons button.active {
-            background: #f5576c;
-        }
-
-        .grid {
+        .row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: 70px 1fr auto;
+            align-items: center;
+            padding: 22px 20px;
+            border-top: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s;
+            gap: 16px;
         }
 
-        .card {
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        .row:hover {
+            background: var(--row-bg);
         }
 
-        .card h2 {
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 14px;
+        .row:nth-child(odd) {
+            background: var(--row-bg);
+        }
+
+        .row:nth-child(even) {
+            background: var(--row-bg-alt);
+        }
+
+        .row .icon {
+            font-size: 2rem;
+            text-align: center;
             opacity: 0.85;
         }
 
-        .reading {
-            margin-bottom: 8px;
+        .row .main {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .row .value {
+            font-size: 2.4rem;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .row .unit {
+            font-size: 1rem;
+            color: var(--text-dim);
+        }
+
+        .row .secondary {
+            display: flex;
+            gap: 24px;
+            text-align: right;
+        }
+
+        .row .secondary .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .row .secondary .label {
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .row .secondary .stat-value {
             font-size: 0.95rem;
         }
 
-        .reading span {
-            font-weight: bold;
-            font-size: 1.1rem;
+        @media (max-width: 500px) {
+            .row { grid-template-columns: 50px 1fr auto; padding: 18px 14px; gap: 10px; }
+            .row .value { font-size: 1.8rem; }
+            .row .icon { font-size: 1.6rem; }
+            .row .secondary { gap: 14px; }
         }
-
-        .chart-container {
-            background: rgba(255,255,255,0.15);
-            border-radius: 10px;
-            padding: 8px;
-            margin-top: 14px;
-            height: 140px;
-        }
-
-        .chart-wrap {
-            position: relative;
-            margin-top: 14px;
-        }
-
-        .expand-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(0,0,0,0.3);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            width: 26px;
-            height: 26px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            z-index: 2;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #2a2a4e;
-            border-radius: 16px;
-            padding: 30px;
-            width: 90%;
-            max-width: 1000px;
-            height: 70vh;
-            position: relative;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 14px;
-            background: transparent;
-            color: white;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-        }
-
-        .climate  { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .light    { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .gas      { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-        .particles{ background: linear-gradient(135deg, #fa709a, #fee140); }
     </style>
 </head>
 <body>
 
-    <h1>🌿 Jake's Enviro+ Dashboard</h1>
-
-    <div class="range-buttons">
-        <button onclick="setRange('hour', this)" class="active">Hour</button>
-        <button onclick="setRange('day', this)">Day</button>
-        <button onclick="setRange('week', this)">Week</button>
+    <div class="header">
+        <span></span>
+        <span class="location">🌿 Enviro+</span>
+        <span></span>
     </div>
 
-    <div class="grid">
+    <div class="rows">
 
-        <div class="card climate">
-            <h2>🌡 Climate</h2>
-            <div class="reading">Temp: <span id="temperature">{{ temperature | round(1) }}</span> °F</div>
-            <div class="reading">Humidity: <span id="humidity">{{ humidity | round(1) }}</span> %</div>
-            <div class="reading">Pressure: <span id="pressure">{{ pressure | round(1) }}</span> hPa</div>
-            <div class="chart-wrap">
-	    <button class="expand-btn" onclick="expandChart('climate')">⛶</button>
-    	    <div class="chart-container"><canvas id="climateChart"></canvas></div>
+        <div class="row" onclick="goHistory('temperature')">
+            <div class="icon">🌡</div>
+            <div class="main">
+                <span class="value" id="temperature">{{ temperature | round(1) }}</span>
+                <span class="unit">°F</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">Humidity</span>
+                    <span class="stat-value" id="humidity">{{ humidity | round(1) }}%</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Pressure</span>
+                    <span class="stat-value" id="pressure">{{ pressure | round(1) }} hPa</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card light">
-            <h2>💡 Light</h2>
-            <div class="reading">Light: <span id="light">{{ light | round(1) }}</span> lux</div>
-            <div class="reading">Proximity: <span id="proximity">{{ proximity }}</span></div>
-            <div class="chart-wrap">
-            <button class="expand-btn" onclick="expandChart('light')">⛶</button>
-            <div class="chart-container"><canvas id="lightChart"></canvas></div>
+        <div class="row" onclick="goHistory('light')">
+            <div class="icon">💡</div>
+            <div class="main">
+                <span class="value" id="light">{{ light | round(1) }}</span>
+                <span class="unit">lux</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">Proximity</span>
+                    <span class="stat-value" id="proximity">{{ proximity }}</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card gas">
-            <h2>💨 Gas</h2>
-            <div class="reading">Oxidising: <span id="oxidising">{{ oxidising | round(2) }}</span></div>
-            <div class="reading">Reducing: <span id="reducing">{{ reducing | round(2) }}</span></div>
-            <div class="reading">NH3: <span id="nh3">{{ nh3 | round(2) }}</span></div>
-            <div class="chart-wrap">
-   	    <button class="expand-btn" onclick="expandChart('gas')">⛶</button>
-            <div class="chart-container"><canvas id="gasChart"></canvas></div>
+        <div class="row" onclick="goHistory('oxidising')">
+            <div class="icon">💨</div>
+            <div class="main">
+                <span class="value" id="oxidising">{{ oxidising | round(2) }}</span>
+                <span class="unit">kΩ Oxidising</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">Reducing</span>
+                    <span class="stat-value" id="reducing">{{ reducing | round(2) }} kΩ</span>
+                </div>
+                <div class="stat">
+                    <span class="label">NH3</span>
+                    <span class="stat-value" id="nh3">{{ nh3 | round(2) }} kΩ</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card particles">
-            <h2>🌫 Particulates</h2>
-            <div class="reading">PM1: <span id="pm1">{{ pm1 }}</span> µg/m³</div>
-            <div class="reading">PM2.5: <span id="pm25">{{ pm25 }}</span> µg/m³</div>
-            <div class="reading">PM10: <span id="pm10">{{ pm10 }}</span> µg/m³</div>
-            <div class="chart-wrap">
-	    <button class="expand-btn" onclick="expandChart('particles')">⛶</button>
-	    <div class="chart-container"><canvas id="particlesChart"></canvas></div>
-        </div>
-       
-	<div id="modal" class="modal" onclick="closeModal(event)">
-            <div class="modal-content">
-            	    <button class="close-btn" onclick="closeModal(event)">✕</button>
-                    <canvas id="modalChart"></canvas>
+        <div class="row" onclick="goHistory('pm25')">
+            <div class="icon">🌫</div>
+            <div class="main">
+                <span class="value" id="pm25">{{ pm25 }}</span>
+                <span class="unit">µg/m³ PM2.5</span>
+            </div>
+            <div class="secondary">
+                <div class="stat">
+                    <span class="label">PM1</span>
+                    <span class="stat-value" id="pm1">{{ pm1 }}</span>
+                </div>
+                <div class="stat">
+                    <span class="label">PM10</span>
+                    <span class="stat-value" id="pm10">{{ pm10 }}</span>
+                </div>
             </div>
         </div>
 
     </div>
 
     <script>
-        let currentRange = 'hour';
-        let charts = {};
-
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: 'white', font: { size: 10 } } } },
-            scales: {
-                x: { ticks: { color: 'white', font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: 'rgba(255,255,255,0.2)' } },
-                y: { ticks: { color: 'white', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.2)' } }
-            }
-        };
-
-const colors = {
-            temperature: '#ff4d4d',
-            humidity: '#4dafff',
-            pressure: '#ffd24d',
-            light: '#ffffff',
-            oxidising: '#ff4d4d',
-            reducing: '#4dafff',
-            nh3: '#ffd24d',
-            pm1: '#ffffff',
-            pm25: '#ff9d6b',
-            pm10: '#ff4d4d'
-        };
-
-        function makeDataset(label, data, color, axisId) {
-            return {
-                label: label,
-                data: data,
-                borderColor: color,
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                tension: 0.3,
-                pointRadius: 0,
-                yAxisID: axisId
-            };
-        }
-
-        function multiAxisOptions(axes) {
-            // axes = [{id: 'y1', color: '#ff4d4d', position: 'left'}, ...]
-            const scales = {
-                x: {
-                    ticks: { color: 'white', font: { size: 9 }, maxTicksLimit: 5 },
-                    grid: { color: 'rgba(255,255,255,0.2)' }
-                }
-            };
-            axes.forEach(axis => {
-                scales[axis.id] = {
-                    position: axis.position,
-                    ticks: { color: axis.color, font: { size: 8 } },
-                    grid: { drawOnChartArea: false }
-                };
-            });
-            return {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: 'white', font: { size: 10 } } } },
-                scales: scales
-            };
-        }
-
-        function createCharts(history) {
-            const labels = history.map(r => new Date(r.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
-
-            charts.climate = new Chart(document.getElementById('climateChart'), {
-                type: 'line',
-                data: { labels: labels, datasets: [
-                    makeDataset('Temp °F', history.map(r => r.temperature), colors.temperature, 'y1'),
-                    makeDataset('Hum %', history.map(r => r.humidity), colors.humidity, 'y2'),
-                    makeDataset('Pres hPa', history.map(r => r.pressure), colors.pressure, 'y3')
-                ]},
-                options: multiAxisOptions([
-                    {id: 'y1', color: colors.temperature, position: 'left'},
-                    {id: 'y2', color: colors.humidity, position: 'right'},
-                    {id: 'y3', color: colors.pressure, position: 'right'}
-                ])
-            });
-
-            charts.light = new Chart(document.getElementById('lightChart'), {
-                type: 'line',
-                data: { labels: labels, datasets: [
-                    makeDataset('Lux', history.map(r => r.light), colors.light, 'y1')
-                ]},
-                options: multiAxisOptions([
-                    {id: 'y1', color: colors.light, position: 'left'}
-                ])
-            });
-
-            charts.gas = new Chart(document.getElementById('gasChart'), {
-                type: 'line',
-                data: { labels: labels, datasets: [
-                    makeDataset('Ox kΩ', history.map(r => r.oxidising), colors.oxidising, 'y1'),
-                    makeDataset('Red kΩ', history.map(r => r.reducing), colors.reducing, 'y2'),
-                    makeDataset('NH3 kΩ', history.map(r => r.nh3), colors.nh3, 'y3')
-                ]},
-                options: multiAxisOptions([
-                    {id: 'y1', color: colors.oxidising, position: 'left'},
-                    {id: 'y2', color: colors.reducing, position: 'right'},
-                    {id: 'y3', color: colors.nh3, position: 'right'}
-                ])
-            });
-
-            charts.particles = new Chart(document.getElementById('particlesChart'), {
-                type: 'line',
-                data: { labels: labels, datasets: [
-                    makeDataset('PM1 µg', history.map(r => r.pm1), colors.pm1, 'y1'),
-                    makeDataset('PM2.5 µg', history.map(r => r.pm25), colors.pm25, 'y2'),
-                    makeDataset('PM10 µg', history.map(r => r.pm10), colors.pm10, 'y3')
-                ]},
-                options: multiAxisOptions([
-                    {id: 'y1', color: colors.pm1, position: 'left'},
-                    {id: 'y2', color: colors.pm25, position: 'right'},
-                    {id: 'y3', color: colors.pm10, position: 'right'}
-                ])
-            });
-        }
-
-        function loadHistory() {
-            fetch('/history?range=' + currentRange)
-                .then(r => r.json())
-                .then(history => {
-                    Object.values(charts).forEach(c => c.destroy());
-                    charts = {};
-                    createCharts(history);
-                });
-	}
-
-        function setRange(range, button) {
-            currentRange = range;
-            document.querySelectorAll('.range-buttons button').forEach(b => b.classList.remove('active'));
-            button.classList.add('active');
-            loadHistory();
+        function goHistory(metric) {
+            window.location = '/history-view?metric=' + metric;
         }
 
         function updateLive() {
@@ -346,60 +211,20 @@ const colors = {
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('temperature').textContent = data.temperature;
-                    document.getElementById('humidity').textContent = data.humidity;
-                    document.getElementById('pressure').textContent = data.pressure;
+                    document.getElementById('humidity').textContent = data.humidity + '%';
+                    document.getElementById('pressure').textContent = data.pressure + ' hPa';
                     document.getElementById('light').textContent = data.light;
                     document.getElementById('proximity').textContent = data.proximity;
                     document.getElementById('oxidising').textContent = data.oxidising;
-                    document.getElementById('reducing').textContent = data.reducing;
-                    document.getElementById('nh3').textContent = data.nh3;
-                    document.getElementById('pm1').textContent = data.pm1;
+                    document.getElementById('reducing').textContent = data.reducing + ' kΩ';
+                    document.getElementById('nh3').textContent = data.nh3 + ' kΩ';
                     document.getElementById('pm25').textContent = data.pm25;
+                    document.getElementById('pm1').textContent = data.pm1;
                     document.getElementById('pm10').textContent = data.pm10;
                 });
         }
 
-        let modalChart = null;
-
-        function expandChart(chartName) {
-            const source = charts[chartName];
-            if (!source) return;
-
-            const modal = document.getElementById('modal');
-            modal.classList.add('active');
-
-            if (modalChart) modalChart.destroy();
-
-            // Deep-ish clone the config
-            const config = {
-                type: 'line',
-                data: JSON.parse(JSON.stringify(source.config.data)),
-                options: JSON.parse(JSON.stringify(source.config.options))
-            };
-            // Make axes visible and bigger
-            Object.keys(config.options.scales).forEach(key => {
-                if (config.options.scales[key].ticks) {
-                    config.options.scales[key].ticks.font = { size: 12 };
-                }
-            });
-
-            modalChart = new Chart(document.getElementById('modalChart'), config);
-        }
-
-        function closeModal(event) {
-            // Only close if clicking the background or the X, not the chart itself
-            if (event.target.id === 'modal' || event.target.classList.contains('close-btn')) {
-                document.getElementById('modal').classList.remove('active');
-                if (modalChart) {
-                    modalChart.destroy();
-                    modalChart = null;
-                }
-            }
-        }
-
-        loadHistory();
         setInterval(updateLive, 5000);
-        setInterval(loadHistory, 60000); // refresh graphs every minute
     </script>
 
 </body>
