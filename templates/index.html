@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enviro+ Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -68,9 +69,17 @@
         }
 
         .row .icon {
-            font-size: 2rem;
-            text-align: center;
-            opacity: 0.85;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text);
+            opacity: 0.7;
+        }
+
+        .row .icon svg {
+            width: 28px;
+            height: 28px;
+            stroke-width: 1.5;
         }
 
         .row .main {
@@ -132,7 +141,7 @@
     <div class="rows">
 
         <div class="row" onclick="goHistory('temperature')">
-            <div class="icon">🌡</div>
+            <div class="icon"><i data-lucide="thermometer"></i></div>
             <div class="main">
                 <span class="value" id="temperature">{{ temperature | round(1) }}</span>
                 <span class="unit">°F</span>
@@ -145,7 +154,7 @@
         </div>
 
         <div class="row" onclick="goHistory('humidity')">
-            <div class="icon">💧</div>
+            <div class="icon"><i data-lucide="droplet"></i></div>
             <div class="main">
                 <span class="value" id="humidity">{{ humidity | round(1) }}</span>
                 <span class="unit">%</span>
@@ -158,7 +167,7 @@
         </div>
 
         <div class="row" onclick="goHistory('pressure')">
-            <div class="icon">🌬</div>
+            <div class="icon"><i data-lucide="gauge"></i></div>
             <div class="main">
                 <span class="value" id="pressure">{{ pressure | round(1) }}</span>
                 <span class="unit">hPa</span>
@@ -171,7 +180,7 @@
         </div>
 
         <div class="row" onclick="goHistory('light')">
-            <div class="icon">💡</div>
+            <div class="icon"><i data-lucide="sun"></i></div>
             <div class="main">
                 <span class="value" id="light">{{ light | round(1) }}</span>
                 <span class="unit">lux</span>
@@ -184,7 +193,7 @@
         </div>
 
         <div class="row" onclick="goHistory('proximity')">
-            <div class="icon">👋</div>
+            <div class="icon"><i data-lucide="hand"></i></div>
             <div class="main">
                 <span class="value" id="proximity">{{ proximity }}</span>
                 <span class="unit"></span>
@@ -197,7 +206,7 @@
         </div>
 
         <div class="row" onclick="goHistory('oxidising')">
-            <div class="icon">🔥</div>
+            <div class="icon"><i data-lucide="flame"></i></div>
             <div class="main">
                 <span class="value" id="oxidising">{{ oxidising | round(2) }}</span>
                 <span class="unit">kΩ</span>
@@ -210,7 +219,7 @@
         </div>
 
         <div class="row" onclick="goHistory('reducing')">
-            <div class="icon">♻️</div>
+            <div class="icon"><i data-lucide="recycle"></i></div>
             <div class="main">
                 <span class="value" id="reducing">{{ reducing | round(2) }}</span>
                 <span class="unit">kΩ</span>
@@ -223,7 +232,7 @@
         </div>
 
         <div class="row" onclick="goHistory('nh3')">
-            <div class="icon">🧪</div>
+            <div class="icon"><i data-lucide="flask-conical"></i></div>
             <div class="main">
                 <span class="value" id="nh3">{{ nh3 | round(2) }}</span>
                 <span class="unit">kΩ</span>
@@ -236,7 +245,7 @@
         </div>
 
         <div class="row" onclick="goHistory('pm1')">
-            <div class="icon">🌫</div>
+            <div class="icon"><i data-lucide="wind"></i></div>
             <div class="main">
                 <span class="value" id="pm1">{{ pm1 }}</span>
                 <span class="unit">µg/m³</span>
@@ -249,7 +258,7 @@
         </div>
 
         <div class="row" onclick="goHistory('pm25')">
-            <div class="icon">🌫</div>
+            <div class="icon"><i data-lucide="wind"></i></div>
             <div class="main">
                 <span class="value" id="pm25">{{ pm25 }}</span>
                 <span class="unit">µg/m³</span>
@@ -262,7 +271,7 @@
         </div>
 
         <div class="row" onclick="goHistory('pm10')">
-            <div class="icon">🌫</div>
+            <div class="icon"><i data-lucide="wind"></i></div>
             <div class="main">
                 <span class="value" id="pm10">{{ pm10 }}</span>
                 <span class="unit">µg/m³</span>
@@ -300,6 +309,7 @@
         }
 
         setInterval(updateLive, 5000);
+        lucide.createIcons();
     </script>
 
 </body>
